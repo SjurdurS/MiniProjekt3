@@ -21,7 +21,7 @@ public class Node {
 
         int localPort = 1025;
         InetAddress nodeIP = InetAddress.getLocalHost();
-        int nodePort;
+        int nodePort = 1026;
 
         if (args.length == 1) {
             localPort = Integer.parseInt(args[0]);
