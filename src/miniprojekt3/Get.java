@@ -5,6 +5,8 @@
  */
 package miniprojekt3;
 
+import java.net.InetAddress;
+
 /**
  *
  * @author Sjurdur
@@ -13,12 +15,12 @@ public class Get {
 
     public static void main(String[] args) throws Exception {
 
-        String nodeIP;
+        InetAddress nodeIP = InetAddress.getLocalHost();
         int nodePort;
         int key;
 
         if (args.length == 4) {
-            nodeIP = args[0];
+            nodeIP = InetAddress.getByName(args[0]);
             nodePort = Integer.parseInt(args[1]);
             key = Integer.parseInt(args[2]);
         } else {

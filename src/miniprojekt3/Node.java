@@ -5,6 +5,7 @@
  */
 package miniprojekt3;
 
+import java.net.InetAddress;
 import java.util.HashMap;
 
 /**
@@ -19,14 +20,14 @@ public class Node {
     public static void main(String[] args) throws Exception {
 
         int localPort = 1025;
-        String nodeIP;
+        InetAddress nodeIP = InetAddress.getLocalHost();
         int nodePort;
 
         if (args.length == 1) {
             localPort = Integer.parseInt(args[0]);
         } else if (args.length == 3) {
             localPort = Integer.parseInt(args[0]);
-            nodeIP = args[1];
+            nodeIP = InetAddress.getByName(args[1]);
             nodePort = Integer.parseInt(args[2]);
         } else {
             throw new Exception("Incorrect number of arguements.");
