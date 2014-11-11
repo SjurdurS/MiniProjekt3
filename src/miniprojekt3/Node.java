@@ -11,6 +11,7 @@ import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.HashMap;
+import java.util.HashSet;
 
 /**
  *
@@ -20,7 +21,8 @@ public class Node {
 
     // Kun indsætte eller overskrive, ikke slette.
     public HashMap<Integer, String> messages = new HashMap<>();
-
+    public HashSet<NodeTuple> tuple = new HashSet<>(); 
+    
     public static void main(String[] args) throws Exception {
 
         int localPort = 1025;
