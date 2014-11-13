@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package miniprojekt3;
 
 import java.io.IOException;
@@ -35,7 +30,7 @@ public class Get {
             nodePort = Integer.parseInt(args[2]);
             key = Integer.parseInt(args[3]);
 
-            new GetSender(nodeIP.getHostName(), nodePort, key, localHost, localPort);
+            new GetSender(nodeIP, nodePort, key, localHost, localPort);
             new PutListener(localPort);
 
         } else {
@@ -47,7 +42,7 @@ public class Get {
     static class GetSender extends Thread {
 
         // Receiver
-        String nodeIP = null;
+        InetAddress nodeIP = null;
         int nodePort = 0;
 
         //Message
@@ -57,7 +52,7 @@ public class Get {
 
         Socket client = null;
 
-        public GetSender(String nodeIP, int nodePort, int key, String localHost, int localPort) throws IOException {
+        public GetSender(InetAddress nodeIP, int nodePort, int key, String localHost, int localPort) throws IOException {
             this.nodeIP = nodeIP;
             this.nodePort = nodePort;
 
@@ -98,14 +93,13 @@ public class Get {
             try {
                 client = ss.accept();
                 System.out.println("Connected to Sink : " + client.getInetAddress().getHostName());
-                
-                
+
                 ObjectInputStream is = new ObjectInputStream(client.getInputStream());
 
                 Object o = is.readObject();
                 if (o instanceof PutRequest) {
                     PutRequest p = (PutRequest) o;
-                    
+
                     System.out.println("Message received: " + p.value);
                 }
 

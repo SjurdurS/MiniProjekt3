@@ -21,7 +21,7 @@ public class Node {
     // Kun indsætte eller overskrive, ikke slette.
     public static HashMap<Integer, PutRequest> messages = new HashMap<>();
 
-    public static HashSet<NodeTuple> tuple = new HashSet<>();
+    public static HashSet<NodeTuple> nt = new HashSet<>();
 
     public static void main(String[] args) throws Exception {
 
@@ -30,8 +30,8 @@ public class Node {
         InetAddress nodeIP = InetAddress.getLocalHost();
         int nodePort = 1026;
 
-        if (args.length == 0) {
-            //localPort = Integer.parseInt(args[0]);
+        if (args.length == 1) {
+            localPort = Integer.parseInt(args[0]);
 
             Socket receiverSocket = new Socket(localhost, localPort);
 
@@ -44,12 +44,22 @@ public class Node {
                 while (true) {
                     obj = is.readObject();
 
-                    if (obj instanceof GetRequest) {
+                    if (obj instanceof NodeRequest) {
+                        nt.add(new NodeTuple)
+                    }
+                    
+                    else if (obj instanceof NodeInform) {
+                        
+                    }
+                    
+                    else if (obj instanceof GetRequest) {
                         GetRequest getMessage = (GetRequest) obj;
                         //Do logic here.
                         String message = messages.get(getMessage.key);
                         System.out.println("MESSAGE RECEIVED MOTHER FUCKER: " + message);
                         System.out.println("Node Port: " + localPort + "\nGET MESSAGE RECEIVED.\n");
+                        
+                        
                     } else if (obj instanceof PutRequest) {
                         PutRequest putMessage = (PutRequest) obj;
 
@@ -61,12 +71,12 @@ public class Node {
                 System.out.println("Connection died:" + ex.getMessage());
             }
 
-        } if (args.length == 0) {
-            //localPort = Integer.parseInt(args[0]);
-            //nodeIP = InetAddress.getByName(args[1]);
-            //nodePort = Integer.parseInt(args[2]);
+        } if (args.length == 3) {
+            localPort = Integer.parseInt(args[0]);
+            nodeIP = InetAddress.getByName(args[1]);
+            nodePort = Integer.parseInt(args[2]);
 
-            boolean b = tuple.add(new NodeTuple(nodePort, nodeIP.getHostName()));
+            boolean b = nt.add(new NodeTuple(nodePort, nodeIP.getHostName()));
 
         } else {
             throw new Exception("Incorrect number of arguments.");
