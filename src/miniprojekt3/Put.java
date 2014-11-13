@@ -31,9 +31,12 @@ public class Put {
             Socket socketToServer = new Socket(nodeIP, nodePort);
             ObjectOutputStream outStream = new ObjectOutputStream(socketToServer.getOutputStream());
 
-            System.out.println("Sending object to Node " + nodeIP + " port: " + nodePort);
-            outStream.writeObject(new GetRequest(10, value));
-
+            System.out.println("Sending Get Request object to Node at: " + nodeIP + " port: " + nodePort);
+            outStream.writeObject(new PutRequest(key, value));
+            
+            outStream.flush();
+            outStream.close();
+            
             System.exit(0);
 
         } else {

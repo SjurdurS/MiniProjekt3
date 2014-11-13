@@ -19,7 +19,7 @@ import java.util.HashSet;
 public class Node {
 
     // Kun indsætte eller overskrive, ikke slette.
-    public static HashMap<Integer, String> messages = new HashMap<>();
+    public static HashMap<Integer, PutRequest> messages = new HashMap<>();
 
     public static HashSet<NodeTuple> tuple = new HashSet<>();
 

@@ -2,10 +2,14 @@ package miniprojekt3;
 
 public class GetRequest implements java.io.Serializable {
     public int key;
-    public String value;
-    
-    public GetRequest(int key, String value) {
+    public String hostName;
+    public int port;
+
+    public GetRequest(int key, String hostName, int port) {
         this.key = key;
-        this.value = value;
+        this.hostName = hostName;
+        this.port = port;
     }
+    
+ 
 }
