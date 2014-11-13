@@ -5,7 +5,7 @@ import java.io.*;
 public class SerializeDemo {
 
     public static void main(String[] args) {
-        GetRequest gr = new GetRequest();
+        GetRequest gr = new GetRequest(10, "Test");
         gr.key = 1026;
         gr.value = "This is a get request";
         try {
@@ -20,7 +20,7 @@ public class SerializeDemo {
             i.printStackTrace();
         }
         
-        PutRequest pr = new PutRequest();
+        PutRequest pr = new PutRequest(10, "Test");
         pr.key = 1025;
         pr.ip = "localhost";
         pr.port = 717;

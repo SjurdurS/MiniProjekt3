@@ -5,7 +5,9 @@
  */
 package miniprojekt3;
 
+import java.io.ObjectOutputStream;
 import java.net.InetAddress;
+import java.net.Socket;
 
 /**
  *
@@ -25,11 +27,18 @@ public class Put {
             nodePort = Integer.parseInt(args[1]);
             key = Integer.parseInt(args[2]);
             value = args[3];
-        
+
+            Socket socketToServer = new Socket(nodeIP, nodePort);
+            ObjectOutputStream outStream = new ObjectOutputStream(socketToServer.getOutputStream());
+
+            System.out.println("Sending object to Node " + nodeIP + " port: " + nodePort);
+            outStream.writeObject(new GetRequest(10, value));
+
+            System.exit(0);
+
         } else {
             throw new Exception("Incorrect number of arguements.");
         }
-        
-        
+
     }
 }
