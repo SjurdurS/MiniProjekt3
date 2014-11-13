@@ -5,9 +5,11 @@
  */
 package miniprojekt3;
 
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,11 +34,58 @@ public class Node {
 
         if (args.length == 1) {
             localPort = Integer.parseInt(args[0]);
+            new ListenerServer(localPort);
+        }
+        if (args.length == 3) {
+            localPort = Integer.parseInt(args[0]);
+            nodeIP = InetAddress.getByName(args[1]);
+            nodePort = Integer.parseInt(args[2]);
 
-            Socket receiverSocket = new Socket(localhost, localPort);
+            boolean b = nt.add(new NodeTuple(nodePort, nodeIP.getHostName()));
 
+            new ListenerServer(localPort);
+            
+        } else {
+            throw new Exception("Incorrect number of arguments.");
+        }
+    }
+
+    static class ListenerServer extends Thread {
+
+        ServerSocket ss;
+        Socket client = null;
+
+        public ListenerServer(int localPort) throws IOException {
+            this.ss = new ServerSocket(localPort);
+            this.start();
+        }
+
+        public void run() {
+            while (true) {
+                try {
+                    client = ss.accept();
+                    System.out.println("Connected to Node : " + client.getInetAddress().getHostName());
+
+                    new ListenerThread(client);
+                } catch (Exception e) {
+                    System.err.println(e.getMessage());
+                }
+            }
+        }
+    }
+
+    static class ListenerThread extends Thread {
+
+        Socket listenerSocket = null;
+
+        ListenerThread(Socket listenerSocket) {
+            this.listenerSocket = listenerSocket;
+            this.start();
+        }
+
+        public void run() {
             try (
-                    ObjectInputStream is = new ObjectInputStream(receiverSocket.getInputStream());
+                    ObjectInputStream is = new ObjectInputStream(listenerSocket.getInputStream());
                     OutputStream os = System.out;) {
 
                 Object obj = null;
@@ -68,14 +117,14 @@ public class Node {
                         //Do logic here.
                         String message = messages.get(getMessage.key);
                         System.out.println("MESSAGE RECEIVED MOTHER FUCKER: " + message);
-                        System.out.println("Node Port: " + localPort + "\nGET MESSAGE RECEIVED.\n");
+                        System.out.println("Node Port: " + listenerSocket.getPort() + "\nGET MESSAGE RECEIVED.\n");
 
                         // Send Put back to Get
                     } else if (obj instanceof PutRequest) {
                         PutRequest putMessage = (PutRequest) obj;
 
                         messages.put(putMessage.key, putMessage.value);
-                        System.out.println("Node Port: " + localPort + "\nPUT MESSAGE RECEIVED.\n");
+                        System.out.println("Node Port: " + listenerSocket.getPort() + "\nPUT MESSAGE RECEIVED.\n");
 
                         // Send Put to all NodeTuples.
                     }
@@ -83,17 +132,6 @@ public class Node {
             } catch (Exception ex) {
                 System.out.println("Connection died:" + ex.getMessage());
             }
-
-        }
-        if (args.length == 3) {
-            localPort = Integer.parseInt(args[0]);
-            nodeIP = InetAddress.getByName(args[1]);
-            nodePort = Integer.parseInt(args[2]);
-
-            boolean b = nt.add(new NodeTuple(nodePort, nodeIP.getHostName()));
-
-        } else {
-            throw new Exception("Incorrect number of arguments.");
         }
     }
 }

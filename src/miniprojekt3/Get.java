@@ -84,15 +84,15 @@ public class Get {
         ServerSocket ss;
         Socket client = null;
 
-        public PutListener(int sinkPort) throws IOException {
-            this.ss = new ServerSocket(sinkPort);
+        public PutListener(int localPort) throws IOException {
+            this.ss = new ServerSocket(localPort);
             this.start();
         }
 
         public void run() {
             try {
                 client = ss.accept();
-                System.out.println("Connected to Sink : " + client.getInetAddress().getHostName());
+                System.out.println("Connected to Node : " + client.getInetAddress().getHostName());
 
                 ObjectInputStream is = new ObjectInputStream(client.getInputStream());
 
