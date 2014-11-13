@@ -19,7 +19,7 @@ import java.util.HashSet;
 public class Node {
 
     // Kun indsætte eller overskrive, ikke slette.
-    public static HashMap<Integer, PutRequest> messages = new HashMap<>();
+    public static HashMap<Integer, String> messages = new HashMap<>();
 
     public static HashSet<NodeTuple> nt = new HashSet<>();
 
@@ -45,33 +45,47 @@ public class Node {
                     obj = is.readObject();
 
                     if (obj instanceof NodeRequest) {
-                        nt.add(new NodeTuple)
-                    }
-                    
-                    else if (obj instanceof NodeInform) {
-                        
-                    }
-                    
-                    else if (obj instanceof GetRequest) {
+                        NodeRequest nodeRequest = (NodeRequest) obj;
+
+                        int nodeRequestPort = nodeRequest.port;
+                        String nodeRequestIP = nodeRequest.ip;
+
+                        nt.add(new NodeTuple(nodeRequestPort, nodeRequestIP));
+
+                        for (NodeTuple n : nt) {
+                            NodeInform nodeInform = new NodeInform(nt);
+
+                            // Send NodeInform to (n.getPort(), n.getHostName())
+                        }
+
+                        // Send all Puts to request node.
+                    } else if (obj instanceof NodeInform) {
+                        NodeInform nodeInform = (NodeInform) obj;
+                        nt.addAll(nodeInform.nt);
+
+                    } else if (obj instanceof GetRequest) {
                         GetRequest getMessage = (GetRequest) obj;
                         //Do logic here.
                         String message = messages.get(getMessage.key);
                         System.out.println("MESSAGE RECEIVED MOTHER FUCKER: " + message);
                         System.out.println("Node Port: " + localPort + "\nGET MESSAGE RECEIVED.\n");
-                        
-                        
+
+                        // Send Put back to Get
                     } else if (obj instanceof PutRequest) {
                         PutRequest putMessage = (PutRequest) obj;
 
                         messages.put(putMessage.key, putMessage.value);
                         System.out.println("Node Port: " + localPort + "\nPUT MESSAGE RECEIVED.\n");
+
+                        // Send Put to all NodeTuples.
                     }
                 }
             } catch (Exception ex) {
                 System.out.println("Connection died:" + ex.getMessage());
             }
 
-        } if (args.length == 3) {
+        }
+        if (args.length == 3) {
             localPort = Integer.parseInt(args[0]);
             nodeIP = InetAddress.getByName(args[1]);
             nodePort = Integer.parseInt(args[2]);
