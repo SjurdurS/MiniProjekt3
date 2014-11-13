@@ -1,4 +1,4 @@
-package miniprojekt3;
+
 
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;

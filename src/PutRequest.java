@@ -1,4 +1,4 @@
-package miniprojekt3;
+
 
 public class PutRequest implements java.io.Serializable {
 

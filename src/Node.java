@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package miniprojekt3;
+
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -36,7 +36,7 @@ public class Node {
             localPort = Integer.parseInt(args[0]);
             new ListenerServer(localPort);
         }
-        if (args.length == 3) {
+        else if (args.length == 3) {
             localPort = Integer.parseInt(args[0]);
             nodeIP = InetAddress.getByName(args[1]);
             nodePort = Integer.parseInt(args[2]);
