@@ -6,6 +6,8 @@ import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -105,8 +107,10 @@ public class Get {
 
                 is.close();
 
-            } catch (Exception e) {
-                System.err.println(e.getMessage());
+            } catch (IOException ex) {
+                Logger.getLogger(Get.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (ClassNotFoundException ex) {
+                Logger.getLogger(Get.class.getName()).log(Level.SEVERE, null, ex);
             }
 
         }
