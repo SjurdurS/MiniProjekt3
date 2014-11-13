@@ -16,7 +16,7 @@ public class Get {
     public static void main(String[] args) throws Exception {
 
         // Get request
-        InetAddress nodeIP = InetAddress.getLocalHost();
+        InetAddress nodeIP;
         int nodePort;
         int key;
 
