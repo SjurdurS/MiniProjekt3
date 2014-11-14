@@ -1,6 +1,7 @@
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -36,7 +37,7 @@ public class Get {
             new PutListener(localPort).start();
 
         } else {
-            throw new Exception("Incorrect number of arguments.");
+            System.out.println("Incorrect number of arguements.");
         }
 
     }
@@ -63,15 +64,20 @@ public class Get {
 
         @Override
         public void run() {
-            try {
-                Socket senderSocket = new Socket(nodeIP, nodePort);
-                try (ObjectOutputStream outStream = new ObjectOutputStream(senderSocket.getOutputStream())) {
-                    System.out.println("Sending Get Request object to Node at: " + nodeIP + " port: " + nodePort);
-                    outStream.writeObject(getRequest);
-                }
 
-            } catch (Exception e) {
-                System.err.println(e.getMessage());
+            try (Socket senderSocket = new Socket(nodeIP, nodePort);
+                    ObjectOutputStream outStream = new ObjectOutputStream(senderSocket.getOutputStream())) {
+                System.out.println("Sending Get Request object to Node at: " + nodeIP + " port: " + nodePort);
+                outStream.writeObject(getRequest);
+
+            } catch (ConnectException ce) {
+                System.err.println(ce.getClass() + " - " + ce.getMessage());
+                System.exit(1);
+
+            } catch (IOException ex) {
+                Logger.getLogger(Get.class.getName()).log(Level.SEVERE, null, ex);
+                System.exit(1);
+
             }
         }
     }
@@ -100,6 +106,8 @@ public class Get {
 
                         System.out.println("Message received: " + p.value);
                     }
+                } catch (IOException ex) {
+                    Logger.getLogger(Get.class.getName()).log(Level.SEVERE, null, ex);
                 }
 
             } catch (IOException ex) {

@@ -1,4 +1,5 @@
 import java.io.ObjectOutputStream;
+import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.Socket;
 
@@ -21,21 +22,22 @@ public class Put {
             key = Integer.parseInt(args[2]);
             value = args[3];
 
-            Socket socket = new Socket(nodeIP.getHostName(), nodePort);
-
-            try (ObjectOutputStream outStream = new ObjectOutputStream(socket.getOutputStream());) {
+            try (Socket socket = new Socket(nodeIP.getHostName(), nodePort);
+                    ObjectOutputStream outStream = new ObjectOutputStream(socket.getOutputStream());) {
                 System.out.println("Sending Put Request object to Node at: " + nodeIP + " port: " + nodePort);
                 outStream.writeObject(new PutRequest(key, value));
                 socket.close();
-                
+
                 System.exit(1);
 
+            } catch (ConnectException ce) {
+                System.out.println(ce.getClass() + " " + ce.getMessage());
             } catch (Exception e) {
                 System.out.println(e);
             }
 
         } else {
-            throw new Exception("Incorrect number of arguements.");
+            System.out.println("Incorrect number of arguements.");
         }
 
     }

@@ -4,7 +4,7 @@
  *
  * @author Nicolai
  */
-class NodeTuple {
+class NodeTuple implements java.io.Serializable {
 
     private int port;
     private String hostName;
