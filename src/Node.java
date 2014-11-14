@@ -15,6 +15,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
+ * STUFF TO FIX SENDS PUTS INCOMING PUTS GET SENT AS PUTS AND INFINITE LOOP
+ * INBOUND
  *
  * @author Sjurdur
  */
@@ -45,7 +47,7 @@ public class Node {
             nodePort = Integer.parseInt(args[2]);
 
             nt.add(new NodeTuple(nodePort, nodeIP.getHostName()));
-            
+
             new NodeRequestSender(nodeIP.getHostName(), nodePort, new NodeRequest(localhost, localPort)).start();
 
             new ListenerServer(localPort).start();
@@ -107,7 +109,7 @@ public class Node {
          */
         public synchronized void addNodeTuples(HashSet<NodeTuple> nodeTuples) {
             nt.addAll(nodeTuples);
-            
+
             System.out.println("NodeTuples stored: " + nt.size());
         }
 
@@ -151,22 +153,24 @@ public class Node {
                             new NodeInformSender(n, nodeInform).start();
                         }
                     }
-
-                    Map map = Collections.synchronizedMap(messages);
-                    Set set = map.entrySet();
-                    synchronized (map) {
-                        Iterator i = set.iterator();
-                        // Display elements
-                        while (i.hasNext()) {
-                            Map.Entry me = (Map.Entry) i.next();
-                            int key = (Integer) me.getKey();
-                            String message = (String) me.getValue();
-                            new PutSender(nodeRequestIP, nodeRequestPort, key, message).start();
-                        }
-                    }
+                    PutList putList = new PutList(messages);
+                    new PutListSender(nodeRequestIP, nodeRequestPort, putList).start();
+                    
+//                    Map map = Collections.synchronizedMap(messages);
+//                    Set set = map.entrySet();
+//                    synchronized (map) {
+//                        Iterator i = set.iterator();
+//                        // Display elements
+//                        while (i.hasNext()) {
+//                            Map.Entry me = (Map.Entry) i.next();
+//                            int key = (Integer) me.getKey();
+//                            String message = (String) me.getValue();
+//                            new PutSender(nodeRequestIP, nodeRequestPort, key, message).start();
+//                        }
+//                    }
 
                 } else if (obj instanceof NodeInform) {
-                    System.out.println( "NodeInform RECEIVED");
+                    System.out.println("NodeInform RECEIVED");
 
                     NodeInform nodeInform = (NodeInform) obj;
                     addNodeTuples(nodeInform.nt);
@@ -193,8 +197,24 @@ public class Node {
                     addPutMessage(key, message);
 
                     // Send Put to all NodeTuples.
-                    for (NodeTuple n : nt) {
-                        new PutSender(n.getHostName(), n.getPort(), key, message).start();
+                    // Send nodeinform to all Nodes known by this Node.
+                    Set syncSet = Collections.synchronizedSet(nt);
+                    synchronized (syncSet) {
+                        Iterator i = syncSet.iterator();
+                        // Display elements
+                        while (i.hasNext()) {
+                            NodeTuple n = (NodeTuple) i.next();
+                            PutList putList = new PutList(messages);
+                            new PutListSender(n.getHostName(), n.getPort(), putList).start();
+                        }
+                    }
+                } else if (obj instanceof PutList) {
+                    System.out.println("PutList RECEIVED");
+
+                    PutList putList = (PutList) obj;
+
+                    for (Map.Entry pairs : putList.messages.entrySet()) {
+                        addPutMessage((Integer) pairs.getKey(), (String) pairs.getValue());
                     }
                 }
 
@@ -208,6 +228,33 @@ public class Node {
             }
         }
 
+    }
+
+    static class PutListSender extends Thread {
+
+        String hostName;
+        int port;
+        PutList putList;
+
+        public PutListSender(String hostName, int port, PutList putList) {
+            this.hostName = hostName;
+            this.port = port;
+            this.putList = putList;
+        }
+
+        @Override
+        public void run() {
+            try (Socket senderSocket = new Socket(hostName, port);
+                    ObjectOutputStream outStream = new ObjectOutputStream(senderSocket.getOutputStream())) {
+                System.out.println("Sending PutList to: " + hostName + " port: " + port);
+                outStream.writeObject(putList);
+
+            } catch (ConnectException ce) {
+                System.err.println(ce.getClass() + " - " + ce.getMessage());
+            } catch (IOException ex) {
+                Logger.getLogger(Get.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }
 
     static class PutSender extends Thread {
