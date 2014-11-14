@@ -1,5 +1,3 @@
-
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -27,13 +25,15 @@ public class Get {
         int localPort;
 
         if (args.length == 4) {
-            localPort = Integer.parseInt(args[0]);
-            nodeIP = InetAddress.getByName(args[1]);
+            nodeIP = InetAddress.getByName(args[0]);
+            localPort = Integer.parseInt(args[1]);
             nodePort = Integer.parseInt(args[2]);
             key = Integer.parseInt(args[3]);
 
-            new GetSender(nodeIP, nodePort, key, localHost, localPort);
-            new PutListener(localPort);
+            GetRequest getRequest = new GetRequest(key, localHost, localPort);
+
+            new GetSender(nodeIP, nodePort, getRequest).start();
+            new PutListener(localPort).start();
 
         } else {
             throw new Exception("Incorrect number of arguments.");
@@ -43,37 +43,32 @@ public class Get {
 
     static class GetSender extends Thread {
 
-        // Receiver
+        // Node to send to
         InetAddress nodeIP = null;
         int nodePort = 0;
 
-        //Message
-        int key = 0;
-        String localHost = null;
-        int localPort = 0;
+        // Request to send
+        GetRequest getRequest = null;
 
+        // Socket to send over
         Socket client = null;
 
-        public GetSender(InetAddress nodeIP, int nodePort, int key, String localHost, int localPort) throws IOException {
+        public GetSender(InetAddress nodeIP, int nodePort, GetRequest getRequest) throws IOException {
+            super("GetSenderThread");
             this.nodeIP = nodeIP;
             this.nodePort = nodePort;
 
-            this.key = key;
-            this.localHost = localHost;
-            this.localPort = localPort;
-
-            this.start();
+            this.getRequest = getRequest;
         }
 
+        @Override
         public void run() {
             try {
                 Socket senderSocket = new Socket(nodeIP, nodePort);
-                ObjectOutputStream outStream = new ObjectOutputStream(senderSocket.getOutputStream());
-
-                System.out.println("Sending Get Request object to Node at: " + nodeIP + " port: " + nodePort);
-                outStream.writeObject(new GetRequest(key, localHost, localPort));
-                outStream.flush();
-                outStream.close();
+                try (ObjectOutputStream outStream = new ObjectOutputStream(senderSocket.getOutputStream())) {
+                    System.out.println("Sending Get Request object to Node at: " + nodeIP + " port: " + nodePort);
+                    outStream.writeObject(getRequest);
+                }
 
             } catch (Exception e) {
                 System.err.println(e.getMessage());
@@ -87,25 +82,25 @@ public class Get {
         Socket client = null;
 
         public PutListener(int localPort) throws IOException {
+            super("PutListenerThread");
+
             this.ss = new ServerSocket(localPort);
-            this.start();
         }
 
+        @Override
         public void run() {
             try {
                 client = ss.accept();
-                System.out.println("Connected to Node : " + client.getInetAddress().getHostName());
+                System.out.println("Incoming connection made : " + client.getLocalAddress() + " - " + client.getLocalPort());
 
-                ObjectInputStream is = new ObjectInputStream(client.getInputStream());
+                try (ObjectInputStream is = new ObjectInputStream(client.getInputStream())) {
+                    Object obj = is.readObject();
+                    if (obj instanceof PutRequest) {
+                        PutRequest p = (PutRequest) obj;
 
-                Object o = is.readObject();
-                if (o instanceof PutRequest) {
-                    PutRequest p = (PutRequest) o;
-
-                    System.out.println("Message received: " + p.value);
+                        System.out.println("Message received: " + p.value);
+                    }
                 }
-
-                is.close();
 
             } catch (IOException ex) {
                 Logger.getLogger(Get.class.getName()).log(Level.SEVERE, null, ex);

@@ -117,18 +117,21 @@ public class Node {
                     nt.addAll(nodeInform.nt);
 
                 } else if (obj instanceof GetRequest) {
+                    System.out.println("Node Port: " + listenerSocket.getLocalPort() + " - GET REQUEST RECEIVED.");
+
                     GetRequest getMessage = (GetRequest) obj;
                     //Do logic here.
+                    System.out.println("Please send back to: " + getMessage.hostName + " at port " + getMessage.port);
                     String message = messages.get(getMessage.key);
                     System.out.println("MESSAGE RECEIVED MOTHER FUCKER: " + message);
-                    System.out.println("Node Port: " + listenerSocket.getLocalPort() + " - GET MESSAGE RECEIVED.");
 
                     // Send Put back to Get
                 } else if (obj instanceof PutRequest) {
+                    System.out.println("Node Port: " + listenerSocket.getLocalPort() + " - PUT REQUEST RECEIVED.");
+
                     PutRequest putMessage = (PutRequest) obj;
 
                     messages.put(putMessage.key, putMessage.value);
-                    System.out.println("Node Port: " + listenerSocket.getLocalPort() + " - PUT MESSAGE RECEIVED.");
 
                     // Send Put to all NodeTuples.
                 }
