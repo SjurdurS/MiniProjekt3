@@ -162,8 +162,8 @@ public class Node {
                         }
                     }
 
-                    //PutList putList = new PutList(messages);
-                    //new PutListSender(nodeRequestIP, nodeRequestPort, putList).start();
+                    PutList putList = new PutList(messages);
+                    new PutListSender(nodeRequestIP, nodeRequestPort, putList).start();
                 } else if (obj instanceof NodeInform) {
                     System.out.println("NodeInform RECEIVED");
 
