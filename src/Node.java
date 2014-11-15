@@ -135,8 +135,7 @@ public class Node {
         @Override
         public void run() {
             try (
-                    ObjectInputStream is = new ObjectInputStream(listenerSocket.getInputStream());
-                    ObjectOutputStream os = new ObjectOutputStream(listenerSocket.getOutputStream());) {
+                    ObjectInputStream is = new ObjectInputStream(listenerSocket.getInputStream());) {
 
                 Object obj = is.readObject();
 
