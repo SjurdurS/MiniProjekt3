@@ -1,4 +1,5 @@
 import java.util.HashMap;
+import java.util.Map;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -12,9 +13,9 @@ import java.util.HashMap;
  */
 public class PutList implements java.io.Serializable {
 
-    public HashMap<Integer, String> messages = new HashMap<>();
+    public Map<Integer, String> messages = new HashMap<>();
 
-    public PutList(HashMap<Integer, String> messages) {
+    public PutList(Map<Integer, String> messages) {
         this.messages = messages;
     }
 }

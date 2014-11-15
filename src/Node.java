@@ -23,9 +23,11 @@ import java.util.logging.Logger;
 public class Node {
 
     // Kun indsætte eller overskrive, ikke slette.
-    public static HashMap<Integer, String> messages = new HashMap<>();
+    public static Map<Integer, String> messages = Collections.synchronizedMap(new HashMap<>());
 
-    public static HashSet<NodeTuple> nt = new HashSet<>();
+    public static Set<NodeTuple> nt = Collections.synchronizedSet(new HashSet<>());
+
+    public static NodeTuple thisNode;
 
     public static void main(String[] args) throws Exception {
 
@@ -37,6 +39,8 @@ public class Node {
         if (args.length == 1) {
             System.out.println("Argument 1");
             localPort = Integer.parseInt(args[0]);
+            thisNode = new NodeTuple(localPort, localhost);
+
             new ListenerServer(localPort).start();
 
         } else if (args.length == 3) {
@@ -46,6 +50,8 @@ public class Node {
             nodeIP = InetAddress.getByName(args[1]);
             nodePort = Integer.parseInt(args[2]);
 
+            thisNode = new NodeTuple(localPort, localhost);
+
             nt.add(new NodeTuple(nodePort, nodeIP.getHostName()));
 
             new NodeRequestSender(nodeIP.getHostName(), nodePort, new NodeRequest(localhost, localPort)).start();
@@ -53,7 +59,7 @@ public class Node {
             new ListenerServer(localPort).start();
 
         } else {
-            throw new Exception("Incorrect number of arguments.");
+            System.out.println("Incorrect number of arguments.");
         }
 
     }
@@ -77,8 +83,8 @@ public class Node {
 
                     new ListenerThread(client).start();
 
-                } catch (Exception e) {
-                    System.err.println(e.getMessage());
+                } catch (IOException ex) {
+                    Logger.getLogger(Node.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         }
@@ -99,7 +105,9 @@ public class Node {
          * @param n NodeTuple to add.
          */
         public synchronized void addNodeTuple(NodeTuple n) {
-            nt.add(n);
+            if (!n.equals(thisNode)) {
+                nt.add(n);
+            }
         }
 
         /**
@@ -107,7 +115,8 @@ public class Node {
          *
          * @param nodeTuples The Collection of NodeTuples to add.
          */
-        public synchronized void addNodeTuples(HashSet<NodeTuple> nodeTuples) {
+        public synchronized void addNodeTuples(Set<NodeTuple> nodeTuples) {
+            nodeTuples.remove(thisNode);
             nt.addAll(nodeTuples);
 
             System.out.println("NodeTuples stored: " + nt.size());
@@ -153,22 +162,9 @@ public class Node {
                             new NodeInformSender(n, nodeInform).start();
                         }
                     }
-                    PutList putList = new PutList(messages);
-                    new PutListSender(nodeRequestIP, nodeRequestPort, putList).start();
-                    
-//                    Map map = Collections.synchronizedMap(messages);
-//                    Set set = map.entrySet();
-//                    synchronized (map) {
-//                        Iterator i = set.iterator();
-//                        // Display elements
-//                        while (i.hasNext()) {
-//                            Map.Entry me = (Map.Entry) i.next();
-//                            int key = (Integer) me.getKey();
-//                            String message = (String) me.getValue();
-//                            new PutSender(nodeRequestIP, nodeRequestPort, key, message).start();
-//                        }
-//                    }
 
+                    //PutList putList = new PutList(messages);
+                    //new PutListSender(nodeRequestIP, nodeRequestPort, putList).start();
                 } else if (obj instanceof NodeInform) {
                     System.out.println("NodeInform RECEIVED");
 
@@ -204,8 +200,12 @@ public class Node {
                         // Display elements
                         while (i.hasNext()) {
                             NodeTuple n = (NodeTuple) i.next();
-                            PutList putList = new PutList(messages);
-                            new PutListSender(n.getHostName(), n.getPort(), putList).start();
+                            System.out.println("Are they equal: " + n.getHostName() + n.getPort() + " + " + thisNode.getHostName() + thisNode.getPort() + " = " + n.equals(thisNode));
+                            if (!n.equals(thisNode)) {
+
+                                PutList putList = new PutList(messages);
+                                new PutListSender(n.getHostName(), n.getPort(), putList).start();
+                            }
                         }
                     }
                 } else if (obj instanceof PutList) {
@@ -219,7 +219,6 @@ public class Node {
                 }
 
                 listenerSocket.close();
-                System.out.println("Socket closed.");
 
             } catch (IOException ex) {
                 Logger.getLogger(Node.class.getName()).log(Level.SEVERE, null, ex);
@@ -250,7 +249,7 @@ public class Node {
                 outStream.writeObject(putList);
 
             } catch (ConnectException ce) {
-                System.err.println(ce.getClass() + " - " + ce.getMessage());
+                Logger.getLogger(Get.class.getName()).log(Level.SEVERE, null, ce);
             } catch (IOException ex) {
                 Logger.getLogger(Get.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -288,7 +287,7 @@ public class Node {
                 outStream.writeObject(new PutRequest(key, message));
 
             } catch (ConnectException ce) {
-                System.err.println(ce.getClass() + " - " + ce.getMessage());
+                Logger.getLogger(Get.class.getName()).log(Level.SEVERE, null, ce);
             } catch (IOException ex) {
                 Logger.getLogger(Get.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -314,7 +313,7 @@ public class Node {
                 outStream.writeObject(nodeInform);
 
             } catch (ConnectException ce) {
-                System.err.println(ce.getClass() + " - " + ce.getMessage());
+                Logger.getLogger(Get.class.getName()).log(Level.SEVERE, null, ce);
             } catch (IOException ex) {
                 Logger.getLogger(Get.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -343,7 +342,7 @@ public class Node {
                 outStream.writeObject(nodeRequest);
 
             } catch (ConnectException ce) {
-                System.err.println(ce.getClass() + " - " + ce.getMessage());
+                Logger.getLogger(Get.class.getName()).log(Level.SEVERE, null, ce);
             } catch (IOException ex) {
                 Logger.getLogger(Get.class.getName()).log(Level.SEVERE, null, ex);
             }
