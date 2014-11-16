@@ -22,10 +22,9 @@ import java.util.logging.Logger;
  */
 public class Node {
 
-    // Kun indsætte eller overskrive, ikke slette.
-    public static Map<Integer, String> messages = Collections.synchronizedMap(new HashMap<>());
+    public final static Map<Integer, String> messages = Collections.synchronizedMap(new HashMap<>());
 
-    public static Set<NodeTuple> nt = Collections.synchronizedSet(new HashSet<>());
+    public final static Set<NodeTuple> nodeTuples = Collections.synchronizedSet(new HashSet<>());
 
     public static NodeTuple thisNode;
 
@@ -37,22 +36,19 @@ public class Node {
         int nodePort;
 
         if (args.length == 1) {
-            System.out.println("Argument 1");
             localPort = Integer.parseInt(args[0]);
             thisNode = new NodeTuple(localPort, localhost);
 
             new ListenerServer(localPort).start();
 
         } else if (args.length == 3) {
-            System.out.println("Argument 3");
-
             localPort = Integer.parseInt(args[0]);
             nodeIP = InetAddress.getByName(args[1]);
             nodePort = Integer.parseInt(args[2]);
 
             thisNode = new NodeTuple(localPort, localhost);
 
-            nt.add(new NodeTuple(nodePort, nodeIP.getHostName()));
+            nodeTuples.add(new NodeTuple(nodePort, nodeIP.getHostName()));
 
             new NodeRequestSender(nodeIP.getHostName(), nodePort, new NodeRequest(localhost, localPort)).start();
 
@@ -62,6 +58,61 @@ public class Node {
             System.out.println("Incorrect number of arguments.");
         }
 
+    }
+
+    /**
+     * Sends a message telling other Nodes to remove a specific node from their
+     * list of Nodes.
+     *
+     * @param nodeRemove The NodeTuple to remove
+     */
+    public static synchronized void SendNodeRemoveToAllNodes(NodeRemove nodeRemove) {
+        // Send NodeRemove to all Nodes known by this Node.
+        synchronized (nodeTuples) {
+            nodeTuples.remove(nodeRemove);
+
+            Iterator i = nodeTuples.iterator();
+            while (i.hasNext()) {
+                NodeTuple n = (NodeTuple) i.next();
+                if (!n.equals(thisNode)) {
+                    new NodeRemoveSender(n.getHostName(), n.getPort(), nodeRemove).start();
+                }
+            }
+        }
+    }
+
+    /**
+     * Send a PutList to all Nodes.
+     *
+     * @param putList The PutList to send.
+     */
+    public static synchronized void SendPutListToAllNodes(PutList putList) {
+        synchronized (nodeTuples) {
+            Iterator i = nodeTuples.iterator();
+            // Display elements
+            while (i.hasNext()) {
+                NodeTuple n = (NodeTuple) i.next();
+                if (!n.equals(thisNode)) {
+                    new PutListSender(n.getHostName(), n.getPort(), putList).start();
+                }
+            }
+        }
+    }
+
+    /**
+     * Send NodeInform to all Nodes known by this Node.
+     *
+     * @param nodeInform The NodeInform object to send.
+     */
+    public static synchronized void SendNodeInformToAllNodes(NodeInform nodeInform) {
+        synchronized (nodeTuples) {
+            Iterator i = nodeTuples.iterator();
+            // Display elements
+            while (i.hasNext()) {
+                NodeTuple n = (NodeTuple) i.next();
+                new NodeInformSender(n, nodeInform).start();
+            }
+        }
     }
 
     static class ListenerServer extends Thread {
@@ -77,10 +128,7 @@ public class Node {
         public void run() {
             while (true) {
                 try {
-                    System.out.println("Listening for incoming connections");
                     client = ss.accept();
-                    System.out.println("Connection made");
-
                     new ListenerThread(client).start();
 
                 } catch (IOException ex) {
@@ -106,7 +154,7 @@ public class Node {
          */
         public synchronized void addNodeTuple(NodeTuple n) {
             if (!n.equals(thisNode)) {
-                nt.add(n);
+                nodeTuples.add(n);
             }
         }
 
@@ -117,9 +165,7 @@ public class Node {
          */
         public synchronized void addNodeTuples(Set<NodeTuple> nodeTuples) {
             nodeTuples.remove(thisNode);
-            nt.addAll(nodeTuples);
-
-            System.out.println("NodeTuples stored: " + nt.size());
+            Node.nodeTuples.addAll(nodeTuples);
         }
 
         /**
@@ -140,8 +186,6 @@ public class Node {
                 Object obj = is.readObject();
 
                 if (obj instanceof NodeRequest) {
-                    System.out.println("NodeRequest RECEIVED");
-
                     NodeRequest nodeRequest = (NodeRequest) obj;
 
                     int nodeRequestPort = nodeRequest.port;
@@ -149,30 +193,16 @@ public class Node {
                     NodeTuple nodeTuple = new NodeTuple(nodeRequestPort, nodeRequestIP);
                     addNodeTuple(nodeTuple);
 
-                    // Send nodeinform to all Nodes known by this Node.
-                    Set syncSet = Collections.synchronizedSet(nt);
-                    synchronized (syncSet) {
-                        Iterator i = syncSet.iterator();
-                        // Display elements
-                        while (i.hasNext()) {
-                            NodeTuple n = (NodeTuple) i.next();
-                            NodeInform nodeInform = new NodeInform(nt);
-
-                            new NodeInformSender(n, nodeInform).start();
-                        }
-                    }
+                    NodeInform nodeInform = new NodeInform(nodeTuples);
+                    SendNodeInformToAllNodes(nodeInform);
 
                     PutList putList = new PutList(messages);
                     new PutListSender(nodeRequestIP, nodeRequestPort, putList).start();
                 } else if (obj instanceof NodeInform) {
-                    System.out.println("NodeInform RECEIVED");
-
                     NodeInform nodeInform = (NodeInform) obj;
                     addNodeTuples(nodeInform.nt);
 
                 } else if (obj instanceof GetRequest) {
-                    System.out.println("GetRequest RECEIVED");
-
                     GetRequest getMessage = (GetRequest) obj;
                     String message = messages.get(getMessage.key);
 
@@ -182,8 +212,6 @@ public class Node {
                     }
 
                 } else if (obj instanceof PutRequest) {
-                    System.out.println("PutRequest RECEIVED");
-
                     PutRequest putRequest = (PutRequest) obj;
                     int key = putRequest.key;
 
@@ -191,30 +219,18 @@ public class Node {
 
                     addPutMessage(key, message);
 
-                    // Send Put to all NodeTuples.
-                    // Send nodeinform to all Nodes known by this Node.
-                    Set syncSet = Collections.synchronizedSet(nt);
-                    synchronized (syncSet) {
-                        Iterator i = syncSet.iterator();
-                        // Display elements
-                        while (i.hasNext()) {
-                            NodeTuple n = (NodeTuple) i.next();
-                            System.out.println("Are they equal: " + n.getHostName() + n.getPort() + " + " + thisNode.getHostName() + thisNode.getPort() + " = " + n.equals(thisNode));
-                            if (!n.equals(thisNode)) {
+                    PutList putList = new PutList(messages);
+                    SendPutListToAllNodes(putList);
 
-                                PutList putList = new PutList(messages);
-                                new PutListSender(n.getHostName(), n.getPort(), putList).start();
-                            }
-                        }
-                    }
                 } else if (obj instanceof PutList) {
-                    System.out.println("PutList RECEIVED");
-
                     PutList putList = (PutList) obj;
 
                     for (Map.Entry pairs : putList.messages.entrySet()) {
                         addPutMessage((Integer) pairs.getKey(), (String) pairs.getValue());
                     }
+                } else if (obj instanceof NodeRemove) {
+                    NodeRemove nodeRemove = (NodeRemove) obj;
+                    nodeTuples.remove(nodeRemove);
                 }
 
                 listenerSocket.close();
@@ -244,10 +260,12 @@ public class Node {
         public void run() {
             try (Socket senderSocket = new Socket(hostName, port);
                     ObjectOutputStream outStream = new ObjectOutputStream(senderSocket.getOutputStream())) {
-                System.out.println("Sending PutList to: " + hostName + " port: " + port);
                 outStream.writeObject(putList);
 
             } catch (ConnectException ce) {
+                NodeRemove nodeRemove = new NodeRemove(port, hostName);
+                SendNodeRemoveToAllNodes(nodeRemove);
+
                 Logger.getLogger(Get.class.getName()).log(Level.SEVERE, null, ce);
             } catch (IOException ex) {
                 Logger.getLogger(Get.class.getName()).log(Level.SEVERE, null, ex);
@@ -282,11 +300,11 @@ public class Node {
         public void run() {
             try (Socket senderSocket = new Socket(hostName, port);
                     ObjectOutputStream outStream = new ObjectOutputStream(senderSocket.getOutputStream())) {
-                System.out.println("Sending PutMessage to: " + hostName + " port: " + port);
                 outStream.writeObject(new PutRequest(key, message));
 
             } catch (ConnectException ce) {
-                Logger.getLogger(Get.class.getName()).log(Level.SEVERE, null, ce);
+                NodeRemove nodeRemove = new NodeRemove(port, hostName);
+                SendNodeRemoveToAllNodes(nodeRemove);
             } catch (IOException ex) {
                 Logger.getLogger(Get.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -308,11 +326,11 @@ public class Node {
         public void run() {
             try (Socket senderSocket = new Socket(nodeTuple.getHostName(), nodeTuple.getPort());
                     ObjectOutputStream outStream = new ObjectOutputStream(senderSocket.getOutputStream())) {
-                System.out.println("Sending NodeInform to: " + nodeTuple.getHostName() + " port: " + nodeTuple.getPort());
                 outStream.writeObject(nodeInform);
 
             } catch (ConnectException ce) {
-                Logger.getLogger(Get.class.getName()).log(Level.SEVERE, null, ce);
+                NodeRemove nodeRemove = new NodeRemove(nodeTuple.getPort(), nodeTuple.getHostName());
+                SendNodeRemoveToAllNodes(nodeRemove);
             } catch (IOException ex) {
                 Logger.getLogger(Get.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -337,11 +355,40 @@ public class Node {
         public void run() {
             try (Socket senderSocket = new Socket(hostName, port);
                     ObjectOutputStream outStream = new ObjectOutputStream(senderSocket.getOutputStream())) {
-                System.out.println("Sending NodeRequest to: " + hostName + " port: " + port);
                 outStream.writeObject(nodeRequest);
 
             } catch (ConnectException ce) {
-                Logger.getLogger(Get.class.getName()).log(Level.SEVERE, null, ce);
+                NodeRemove nodeRemove = new NodeRemove(port, hostName);
+                SendNodeRemoveToAllNodes(nodeRemove);
+            } catch (IOException ex) {
+                Logger.getLogger(Get.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    static class NodeRemoveSender extends Thread {
+
+        String hostName;
+        int port;
+
+        NodeTuple nodeTuple;
+
+        public NodeRemoveSender(String hostName, int port, NodeTuple nodeTuple) {
+            super("NodeRemoveSenderThread");
+            this.hostName = hostName;
+            this.port = port;
+            this.nodeTuple = nodeTuple;
+        }
+
+        @Override
+        public void run() {
+            try (Socket senderSocket = new Socket(hostName, port);
+                    ObjectOutputStream outStream = new ObjectOutputStream(senderSocket.getOutputStream())) {
+                outStream.writeObject(nodeTuple);
+
+            } catch (ConnectException ce) {
+                NodeRemove nodeRemove = new NodeRemove(port, hostName);
+                SendNodeRemoveToAllNodes(nodeRemove);
             } catch (IOException ex) {
                 Logger.getLogger(Get.class.getName()).log(Level.SEVERE, null, ex);
             }

@@ -1,5 +1,3 @@
-
-
 /**
  *
  * @author Nicolai
@@ -26,15 +24,18 @@ class NodeTuple implements java.io.Serializable {
 
     @Override
     public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof NodeTuple)) {
+            return false;
+        }
 
-        if (this == obj) {
-            return true;
-        }
         NodeTuple n = (NodeTuple) obj;
-        if (n.getHostName().equals(this.hostName) && n.getPort() == this.port) {
-            return true;
-        }
-        return false;
+        return n.getHostName().equals(this.hostName) && n.getPort() == this.port;
     }
 
     @Override
