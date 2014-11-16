@@ -115,6 +115,37 @@ public class Node {
         }
     }
 
+    /**
+     * Add a NodeTuple to the common Collection of NodeTuples
+     *
+     * @param n NodeTuple to add.
+     */
+    public static synchronized void addNodeTuple(NodeTuple n) {
+        if (!n.equals(thisNode)) {
+            nodeTuples.add(n);
+        }
+    }
+
+    /**
+     * Add a collection of NodeTuples to the common Collection of NodeTuples
+     *
+     * @param nodeTuples The Collection of NodeTuples to add.
+     */
+    public static synchronized void addNodeTuples(Set<NodeTuple> nodeTuples) {
+        nodeTuples.remove(thisNode);
+        Node.nodeTuples.addAll(nodeTuples);
+    }
+
+    /**
+     * Add a message to the messages collection.
+     *
+     * @param key The key of the message
+     * @param message The content of the message
+     */
+    public static synchronized void addPutMessage(int key, String message) {
+        messages.put(key, message);
+    }
+
     static class ListenerServer extends Thread {
 
         ServerSocket ss;
@@ -145,37 +176,6 @@ public class Node {
         ListenerThread(Socket listenerSocket) {
             super("ListenerThread");
             this.listenerSocket = listenerSocket;
-        }
-
-        /**
-         * Add a NodeTuple to the common Collection of NodeTuples
-         *
-         * @param n NodeTuple to add.
-         */
-        public synchronized void addNodeTuple(NodeTuple n) {
-            if (!n.equals(thisNode)) {
-                nodeTuples.add(n);
-            }
-        }
-
-        /**
-         * Add a collection of NodeTuples to the common Collection of NodeTuples
-         *
-         * @param nodeTuples The Collection of NodeTuples to add.
-         */
-        public synchronized void addNodeTuples(Set<NodeTuple> nodeTuples) {
-            nodeTuples.remove(thisNode);
-            Node.nodeTuples.addAll(nodeTuples);
-        }
-
-        /**
-         * Add a message to the messages collection.
-         *
-         * @param key The key of the message
-         * @param message The content of the message
-         */
-        public synchronized void addPutMessage(int key, String message) {
-            messages.put(key, message);
         }
 
         @Override
@@ -265,8 +265,6 @@ public class Node {
             } catch (ConnectException ce) {
                 NodeRemove nodeRemove = new NodeRemove(port, hostName);
                 SendNodeRemoveToAllNodes(nodeRemove);
-
-                Logger.getLogger(Get.class.getName()).log(Level.SEVERE, null, ce);
             } catch (IOException ex) {
                 Logger.getLogger(Get.class.getName()).log(Level.SEVERE, null, ex);
             }
