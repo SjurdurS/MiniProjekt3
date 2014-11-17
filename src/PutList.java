@@ -14,4 +14,8 @@ public class PutList implements java.io.Serializable {
     public PutList(Map<Integer, String> messages) {
         this.messages = messages;
     }
+    
+    public PutList(int key, String value) {
+        messages.put(key, value);
+    }
 }

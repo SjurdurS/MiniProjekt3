@@ -66,7 +66,7 @@ public class Node {
      *
      * @param nodeRemove The NodeTuple to remove
      */
-    public static synchronized void SendNodeRemoveToAllNodes(NodeRemove nodeRemove) {
+    public static void SendNodeRemoveToAllNodes(NodeRemove nodeRemove) {
         // Send NodeRemove to all Nodes known by this Node.
         synchronized (nodeTuples) {
             nodeTuples.remove(nodeRemove);
@@ -86,7 +86,7 @@ public class Node {
      *
      * @param putList The PutList to send.
      */
-    public static synchronized void SendPutListToAllNodes(PutList putList) {
+    public static void SendPutListToAllNodes(PutList putList) {
         synchronized (nodeTuples) {
             Iterator i = nodeTuples.iterator();
             // Display elements
@@ -104,7 +104,7 @@ public class Node {
      *
      * @param nodeInform The NodeInform object to send.
      */
-    public static synchronized void SendNodeInformToAllNodes(NodeInform nodeInform) {
+    public static void SendNodeInformToAllNodes(NodeInform nodeInform) {
         synchronized (nodeTuples) {
             Iterator i = nodeTuples.iterator();
             // Display elements
@@ -219,7 +219,8 @@ public class Node {
 
                     addPutMessage(key, message);
 
-                    PutList putList = new PutList(messages);
+                    // PutList that only contains the new message
+                    PutList putList = new PutList(key, message);
                     SendPutListToAllNodes(putList);
 
                 } else if (obj instanceof PutList) {
