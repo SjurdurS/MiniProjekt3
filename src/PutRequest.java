@@ -1,5 +1,9 @@
-
-
+/**
+ *
+ * @author Sjúrður í Sandagerði
+ * @author Nicolai Thorndahl
+ * @author Ans Uddin
+ */
 public class PutRequest implements java.io.Serializable {
 
     public int key;

@@ -1,8 +1,8 @@
-
-
 /**
  *
- * @author Sjurdur
+ * @author Sjúrður í Sandagerði
+ * @author Nicolai Thorndahl
+ * @author Ans Uddin
  */
 public class NodeRequest implements java.io.Serializable {
 

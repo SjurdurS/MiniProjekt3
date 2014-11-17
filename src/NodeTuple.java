@@ -1,6 +1,8 @@
 /**
  *
- * @author Nicolai
+ * @author Sjúrður í Sandagerði
+ * @author Nicolai Thorndahl
+ * @author Ans Uddin
  */
 class NodeTuple implements java.io.Serializable {
 

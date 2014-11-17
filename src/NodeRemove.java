@@ -1,7 +1,8 @@
-
 /**
  *
- * @author Sjurdur
+ * @author Sjúrður í Sandagerði
+ * @author Nicolai Thorndahl
+ * @author Ans Uddin
  */
 class NodeRemove extends NodeTuple {
 

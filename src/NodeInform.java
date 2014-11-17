@@ -1,11 +1,11 @@
-
-
 import java.util.HashSet;
 import java.util.Set;
 
 /**
  *
- * @author Sjurdur
+ * @author Sjúrður í Sandagerði
+ * @author Nicolai Thorndahl
+ * @author Ans Uddin
  */
 public class NodeInform implements java.io.Serializable {
 

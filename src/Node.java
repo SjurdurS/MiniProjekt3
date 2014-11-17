@@ -15,10 +15,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * STUFF TO FIX SENDS PUTS INCOMING PUTS GET SENT AS PUTS AND INFINITE LOOP
- * INBOUND
  *
- * @author Sjurdur
+ * @author Sjúrður í Sandagerði
+ * @author Nicolai Thorndahl
+ * @author Ans Uddin
  */
 public class Node {
 

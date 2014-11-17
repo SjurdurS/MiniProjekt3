@@ -5,7 +5,9 @@ import java.net.Socket;
 
 /**
  *
- * @author Sjurdur
+ * @author Sjúrður í Sandagerði
+ * @author Nicolai Thorndahl
+ * @author Ans Uddin
  */
 public class Put {
 

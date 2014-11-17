@@ -10,7 +10,9 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author Sjurdur
+ * @author Sjúrður í Sandagerði
+ * @author Nicolai Thorndahl
+ * @author Ans Uddin
  */
 public class Get {
 
